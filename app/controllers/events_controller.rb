@@ -1,23 +1,25 @@
-require "yaleidlookup"
+require 'yale_id_lookup'
 
 class EventsController < ApplicationController
-  before_action :set_event, only: [:show, :edit, :update, :destroy]
-  load_and_authorize_resource
+  # before_action :set_event, only: [:show, :edit, :update, :destroy]
+  load_and_authorize_resource param_method: :event_params
 
   # GET /events
   # GET /events.json
   def index
-    @events = Event.all.reverse
+    @events = @events.reverse
   end
 
   # GET /events/1
   # GET /events/1.json
   def show
+    redirect_to event_attendance_entries_path(@event)
   end
 
   # GET /events/new
   def new
-    @event = Event.new
+    # @event = Event.new
+    @event.users << current_user
   end
 
   # GET /events/1/edit
@@ -27,12 +29,12 @@ class EventsController < ApplicationController
   # POST /events
   # POST /events.json
   def create
-    @event = Event.new(event_params)
+    # @event = Event.new(event_params)
 
     respond_to do |format|
       if @event.save
         format.html { redirect_to events_path, notice: 'Event was successfully created.' }
-        format.json { render action: 'show', status: :created, location: @event }
+        format.json { render action: 'index', status: :created }
       else
         format.html { render action: 'new' }
         format.json { render json: @event.errors, status: :unprocessable_entity }
@@ -43,9 +45,10 @@ class EventsController < ApplicationController
   # PATCH/PUT /events/1
   # PATCH/PUT /events/1.json
   def update
+
     respond_to do |format|
       if @event.update(event_params)
-        format.html { redirect_to @event, notice: 'Event was successfully updated.' }
+        format.html { redirect_to edit_event_path(@event), notice: 'Event was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: 'edit' }
@@ -66,8 +69,8 @@ class EventsController < ApplicationController
 
   # GET /events/1/swipe
   def swipe
-    # authorize! :read, :cardswipe
     @event = Event.find(params[:event_id])
+    authorize! :update, @event
     @count = @event.attendance_entries.count
     render layout: "fullscreen"
   end
@@ -77,16 +80,13 @@ class EventsController < ApplicationController
   def lookup
     # authorize! :lookup, :cardswipe
     @event = Event.find(params[:event_id])
-    upi = YaleIDLookup.determine_upi(params[:query])
+    authorize! :update, @event
 
-    if upi.blank? #or, if it raises an "I cannot find someone" error would be better?
-      flash.now[:error] = "I'm sorry, Dave, I didn't find anyone"
-      redirect_to event_swipe_path(@event)
-    end
+    # if UPI can't be found, a RuntimeError is thrown and is caught below
+    upi = YaleIDLookup.determine_upi(params[:query])
 
     # automatically attempts LDAP as long as there is a UPI present
     attendanceentry = AttendanceEntry.new(upi: upi, event: @event)
-
     if attendanceentry.save
       flash[:notice] = "#{attendanceentry.name} has been successfully recorded for this event."
       @count = @event.attendance_entries.count
@@ -97,18 +97,10 @@ class EventsController < ApplicationController
       end
     end
 
-    # if person.recorded?
-    #   flash[:error] = "#{person.name} has already been recorded for this event."
-    #   redirect_to :distribution_index and return
-    # end
-
-    # if person.record
-    #   flash[:notice] = "#{person.name} has been successfully recorded for this event."
-    #   @count = Student.count
-    # else
-    #   flash[:error] = "Unexpected error while trying to record this person."
-    # end
-
+  rescue RuntimeError => e
+    flash[:error] ||= ""
+    flash[:error] << e.message << "\n"
+  ensure
     redirect_to event_swipe_path(@event)
   end
 
@@ -121,12 +113,12 @@ class EventsController < ApplicationController
 
   private
     # Use callbacks to share common setup or constraints between actions.
-    def set_event
-      @event = Event.find(params[:id])
-    end
+    # def set_event
+    #   @event = Event.find(params[:id])
+    # end
 
     # Never trust parameters from the scary internet, only allow the white list through.
     def event_params
-      params.require(:event).permit(:title, :description)
+      params.require(:event).permit(:title, :description, :user_ids => [])
     end
 end

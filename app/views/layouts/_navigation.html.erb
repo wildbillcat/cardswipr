@@ -10,24 +10,35 @@
 
 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
   <ul class="nav navbar-nav">
-    <% if can? :read, :personlookup %>
       <li>
-        <%= link_to distribution_personlookup_path do %>
-          <span class="glyphicon glyphicon-search"></span> Person Lookup
+        <%= link_to page_path('hardware') do %>
+          <span class="glyphicon glyphicon-flash"></span> Hardware
         <% end %>
       </li>
-    <% end %>
-    <% if can? :read, :events %>
+    <% if can? :read, Event %>
       <li>
         <%= link_to events_path do %>
           <span class="glyphicon glyphicon-list"></span> Events
         <% end %>
       </li>
     <% end %>
+    <% if can? :read, :personlookup %>
+      <li>
+        <%= link_to distribution_personlookup_path do %>
+          <span class="glyphicon glyphicon-search"></span> Walk In Center
+        <% end %>
+      </li>
+    <% end %>
   </ul>
   <ul class="nav navbar-nav navbar-right">
     <li>
-      <%= link_to "Signed in as #{current_user.netid}", root_path if current_user %>
+      <%= link_to 'About', page_path('about') %>
+    </li>
+    <li>
+      <%= link_to "#{current_user.full_name}", edit_user_path(current_user) if current_user %>
+    </li>
+    <li>
+      <%= link_to "Logout", "/logout" %>
     </li>
   </ul>
 </div>

@@ -1,5 +1,4 @@
 [![Code Climate](https://img.shields.io/codeclimate/github/YaleSTC/cardswipr.svg)](https://codeclimate.com/github/YaleSTC/cardswipr)
-[![Test Coverage](https://codeclimate.com/github/YaleSTC/cardswipr/coverage.png)](https://codeclimate.com/github/YaleSTC/cardswipr)
 [![Dependency Status](https://gemnasium.com/YaleSTC/cardswipr.svg)](https://gemnasium.com/YaleSTC/cardswipr)
 [![Inline docs](http://inch-ci.org/github/yalestc/cardswipr.svg)](http://inch-ci.org/github/yalestc/cardswipr)
 
@@ -7,13 +6,13 @@
 # CardSwipr
 ## Features
 ### Event Attendance
-CardSwipr helps you take attendance at meetings and events. Attendees swipe in with this easy interface, the application looks them up in the Yale Phonebook, and collects their information in a list. When the event's over you can even download a `.csv` output of the attendees' information.
+CardSwipr helps you take attendance at meetings and events. Attendees swipe in with this easy interface, the application looks them up in the Yale Phonebook, and collects their information in a list. When the event's over you can even download a spreadsheet (`.csv`) output of the attendees' information.
 
 ![Swipe Screen](READMEImages/SwipeScreenScreenshot.png)
 
 
 ### General Lookup
-CardSwipr can quickly take you to a person's Yale Phonebook entry and open a Service Now Incident for them. This feature is used in some Walk-In Computing Support centers around campus.
+CardSwipr can quickly tell you about a person after they swipe their card. It can both take you to a person's Yale Phonebook entry and open a Service Now Incident with their name already filled out. This feature is used in some Walk-In Computing Support centers around campus.
 
 ![General Lookup](READMEImages/GeneralLookupScreenshot.png)
 
@@ -49,6 +48,9 @@ For `magstrip` and `barcode` lookups we connect to a Yale database on the backen
 
 # Contributing
 ## Set Up
+### secret_token
+Make your own `secret_token` by following the file `/config/initializers/secret_token.example`. Use `rake secret` to generate your own secret key, and keep this private.
+
 ### ruby-oci8 gem
 To set this up, you must install the ruby-oci8 gem by following the instructions here:
 https://github.com/kubo/ruby-oci8/blob/master/docs/install-instant-client.md
@@ -58,10 +60,26 @@ Make sure to change all the commands for the OS you're using and your version nu
 Also you may need to do ruby -e "require 'oci8'"
 
 ### Database Connection Information
-A sample database.yml is available in Yale's private git repository (but it is private).
+A sample database.yml is available in Yale's private git repository (but it is private). This application is not configured to run without a username/password to the right Yale database. We're working on replacing this with a web API for the same information through Layer 7.
+
+### Standard Rails Application Setup
+```
+bundle install
+rake db:create
+rake db:schema:load
+rails server
+```
 
 ## Application Structure
-An explanation of the application structure, what models are used for what, and how the flow of the application works, see [our wiki](https://github.com/YaleSTC/key_distribution_v2/wiki)
+Each of the models have a comment above them explaining what the purpose of the model is.
+
+## Pre-Pull-Request Code Quality Checks
+Before submitting a pull request, please check on the following:
+
+1. Does the testing suite pass? Run `guard`, and press enter once to run the whole testing suite. Guard automatically runs tests on files you've changed, see `Guardfile` for its rules.
+2. Have you added tests for any new features?
+3. Have you corrected as many of pronto's suggestions as make sense? Run pronto with `bundle exec pronto run`. Pronto runs many code analyzers such as rubocop, brakeman, flay, and rails_best_practices - only on the code you've modified.
+4. Does your pull request contain only relevant code changes?
 
 # About
 ## Authors and Contributors

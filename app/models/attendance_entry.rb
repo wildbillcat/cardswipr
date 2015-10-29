@@ -1,6 +1,7 @@
+# attendance entries are created by an event. This is the permanent record of who has attended an event
+# a set of attendance entries for an event can be viewed in the browser or printed to csv
 class AttendanceEntry < ActiveRecord::Base
 
-#has_many people
 belongs_to :event
 validates :event, presence: true
 validates :upi, :uniqueness => { :scope => :event, :message => "This person has already been checked into this event." }
@@ -14,7 +15,7 @@ after_create :get_ldap_attributes
   def get_ldap_attributes
     attributes = YaleLDAP.lookup(upi: upi.to_s)
       .slice(:first_name, :nickname, :last_name, :upi, :netid,
-        :email, :college_name, :college_abbreviation,
+        :email, :organization, :curriculum, :college_name, :college_abbreviation,
         :class_year, :school, :telephone, :address)
     self.update_attributes(attributes)
   end
@@ -27,14 +28,14 @@ after_create :get_ldap_attributes
     end
   end
 
-  def recorded?
-    return EventAttendanceEntry.find_by(upi: self.upi).present?
-  end
+  # def recorded?
+  #   return EventAttendanceEntry.find_by(upi: self.upi).present?
+  # end
 
-  def record
-    return false if recorded?
-    EventAttendanceEntry.create(self.upi)
-  end
+  # def record
+  #   return false if recorded?
+  #   EventAttendanceEntry.create(self.upi)
+  # end
 
   def self.to_csv
     columns_to_export = column_names - ["id", "updated_at", "event_id"]
@@ -47,7 +48,7 @@ after_create :get_ldap_attributes
   end
 
   def swipe_time
-    created_at.strftime("%a %b %d, %I:%M %p")
+    created_at.localtime.strftime("%a %b %d, %I:%M %p")
   end
 
 end
